@@ -1,1 +1,1 @@
-from .main import chnge, extr
+from .main import change, remove, compare

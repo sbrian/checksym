@@ -1,2 +1,2 @@
-from .checks import chnge, extr
+from .checks import change, remove, compare
 
