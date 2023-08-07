@@ -1,10 +1,18 @@
 import unittest
-from checksym import remove, compare
+from checksym import remove, compare, get_test_numbers_for_assumptions
 from sympy import Integral, symbols, exp, oo, E, sqrt, I, pi
 from sympy.physics.quantum import hbar
 
 class TestCheckFunctions(unittest.TestCase):
     
+    def test_get_test_numbers_for_complex(self):
+        '''Sanity check to make sure we get the expected number
+        
+        '''
+        numbers = list(get_test_numbers_for_assumptions({complex: True}))
+        self.assertEqual(121, len(numbers))
+        pass
+
     def test_compare_with_symbols_one_symbol(self):
         '''Case of only one symbols. Debug not iterable error.
 
