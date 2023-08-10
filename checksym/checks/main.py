@@ -4,6 +4,7 @@ import functools
 import sympy
 import numpy
 import mpmath
+from checksym.util import compare_to_significance
 
 def get_test_numbers_for_assumptions(assumptions0):
     '''Return a representative set of numbers for the assumptions.
@@ -55,14 +56,16 @@ def cleanup_for_lambdify(expr):
     return float(real_imag[0]) + 1j * float(real_imag[1])
 
 def compare_for_symbols_with_test_values(expr1, expr2, symbols, test_value_set):
+    significance = 10
     expr1_evaled = expr1.doit()
     expr2_evaled = expr2.doit()
     if len(symbols) != len(test_value_set):
         raise Exception("Invalid test_value_set length")
+    lambdify_modules = ['scipy', 'numpy']
     test_value_set_for_lambify = list(map(cleanup_for_lambdify, test_value_set))
-    this_expr1_lambdify_evaled = lambdify(symbols, expr1_evaled)(*test_value_set_for_lambify)
-    this_expr2_lambdify_evaled = lambdify(symbols, expr2_evaled)(*test_value_set_for_lambify)
-    if this_expr1_lambdify_evaled != this_expr2_lambdify_evaled:
+    this_expr1_lambdify_evaled = lambdify(symbols, expr1_evaled, lambdify_modules)(*test_value_set_for_lambify)
+    this_expr2_lambdify_evaled = lambdify(symbols, expr2_evaled, lambdify_modules)(*test_value_set_for_lambify)
+    if not compare_to_significance(this_expr1_lambdify_evaled, this_expr2_lambdify_evaled, significance):
         return {
             'symbols' : symbols,
             'test_value_set': test_value_set,
@@ -77,6 +80,12 @@ def compare_for_symbols_with_test_values(expr1, expr2, symbols, test_value_set):
 
 @functools.lru_cache(maxsize=None)
 def compare(expr1, expr2, *symbols):
+    '''
+    Compare the two expressions numerically, making replacements for the given symbols.
+
+    The error 'TypeError: loop of ufunc does not support argument 0 of type Mul which has no callable exp method'
+    in lambdify might mean that the list of symbols is incomplete.
+    '''
     test_numbers = map(lambda sym: get_test_numbers_for_symbol(sym), symbols)
     test_value_sets = list(itertools.product(*test_numbers))
     #test_value_sets = [(Integer(1), Integer(3), Integer(1))]

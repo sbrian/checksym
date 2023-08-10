@@ -12,7 +12,6 @@ class TestCheckFunctions(unittest.TestCase):
         '''
         numbers = list(get_test_numbers_for_assumptions({complex: True}))
         self.assertEqual(121, len(numbers))
-        pass
 
     def test_compare_with_symbols_one_symbol(self):
         '''Case of only one symbols. Debug not iterable error.
@@ -29,7 +28,6 @@ class TestCheckFunctions(unittest.TestCase):
         formula2 = formula2.subs(alpha, 1/(a**2))
         result = compare(formula, formula2, a)
         self.assertEqual(None, result)
-        pass
 
     def test_remove_fraction_from_mul_in_integral(self):
         '''Where a fraction within a Mul() within an integral is removed
@@ -43,7 +41,6 @@ class TestCheckFunctions(unittest.TestCase):
         modified_expr = remove(expr, 1/(a**4))
         self.assertEqual(Integral(-hbar**2*n**2*x**2*exp(-x**2/a**2), (x, -oo, oo)),
             modified_expr)
-        pass
 
     def test_remove_from_sum_in_denominator(self):
         '''Where an expression is removed from a sum in a denominator.
@@ -53,7 +50,6 @@ class TestCheckFunctions(unittest.TestCase):
         expr = a / ( b + c )
         modified_expr = remove(expr, b)
         self.assertEqual(a / c, modified_expr)
-        pass
 
     # I can't get this one working 
     #
@@ -74,6 +70,14 @@ class TestCheckFunctions(unittest.TestCase):
     #     self.assertEqual(None, result)
     #     pass
 
+
+    def test_gaussian_convert_formula(self):
+        alpha, beta = symbols("alpha, beta", real=True, positive=True)
+        x = symbols("x")
+        expr1 = Integral(exp(-alpha*x**2 + beta*x), (x, -oo, oo))
+        expr2 = sqrt(pi)*exp(beta**2/(4*alpha))/sqrt(alpha)
+        result = compare(expr1, expr2, alpha, beta)
+        self.assertEqual(None, result)
 
 if __name__ == '__main__':
     unittest.main()
