@@ -1,16 +1,20 @@
 import itertools
 from sympy import *
 import functools
+import sympy
+import numpy
+import mpmath
 
 def get_test_numbers_for_assumptions(assumptions0):
     '''Return a representative set of numbers for the assumptions.
     
-    These "sets" are actually lists, because set() is unordered and
+    These "sets" are actually lists, because Python sets are unordered and
     that causes non-deterministic tests. The items in the lists should
     all be unique, though, although I have not verified that.
     '''
     #integer_set = {1, 2, 10, 97, 100, 1000}
-    integer_set = [1, 3]
+    integer_set = [Integer(1), Integer(3)]
+    #integer_set = [Integer(1)]
     #rational_test_set = {Rational(1,4), Rational(56, 70), Rational(5, 3),
     #                     Rational(3, 5), Rational(100, 3), Rational(1000, 79)}
     rational_test_set = [Rational(1,4), Rational(5, 3)]
@@ -30,7 +34,7 @@ def get_test_numbers_for_assumptions(assumptions0):
     if not assumptions0.get('nonnegative'):
         my_set.extend(list(map(lambda n: -n, my_set)))
     if not assumptions0.get('nonzero'):
-        my_set.extend([0])
+        my_set.extend([Integer(0)])
     if assumptions0.get('real'):
         return my_set
     if assumptions0.get('imaginary'):
@@ -46,37 +50,48 @@ def test_values_replace(expr, symbols, test_value_set):
         replacement_tuples.append((symbols[n], test_value_set[n]))
     return expr.subs(replacement_tuples)
 
+def cleanup_for_lambdify(expr):
+    real_imag = expr.as_real_imag()
+    return float(real_imag[0]) + 1j * float(real_imag[1])
+
 def compare_for_symbols_with_test_values(expr1, expr2, symbols, test_value_set):
     expr1_evaled = expr1.doit()
     expr2_evaled = expr2.doit()
     if len(symbols) != len(test_value_set):
         raise Exception("Invalid test_value_set length")
-    for n in range(0, len(symbols)):
-        this_expr1 = test_values_replace(expr1_evaled, symbols, test_value_set)
-        this_expr1_final = N(this_expr1.doit())
-        this_expr2 = test_values_replace(expr2_evaled, symbols, test_value_set)
-        this_expr2_final = N(this_expr2.doit())
-        if this_expr1_final != this_expr2_final:
-            return {
-                'symbols' : symbols,
-                'test_value_set': test_value_set,
-                'expr1': expr1,
-                'expr1_evaluated': this_expr1,
-                'expr1_final': this_expr1_final,
-                'expr2': expr2,
-                'expr2_evaluated': this_expr2,
-                'expr2_final': this_expr2_final
-            }
+    test_value_set_for_lambify = list(map(cleanup_for_lambdify, test_value_set))
+    this_expr1_lambdify_evaled = lambdify(symbols, expr1_evaled)(*test_value_set_for_lambify)
+    this_expr2_lambdify_evaled = lambdify(symbols, expr2_evaled)(*test_value_set_for_lambify)
+    if this_expr1_lambdify_evaled != this_expr2_lambdify_evaled:
+        return {
+            'symbols' : symbols,
+            'test_value_set': test_value_set,
+            'expr1': expr1,
+            'expr1_evaluated': expr1,
+            'expr1_final': this_expr1_lambdify_evaled,
+            'expr2': expr2,
+            'expr2_evaluated': expr2,
+            'expr2_final': this_expr2_lambdify_evaled
+        }
     return None
 
 @functools.lru_cache(maxsize=None)
 def compare(expr1, expr2, *symbols):
     test_numbers = map(lambda sym: get_test_numbers_for_symbol(sym), symbols)
     test_value_sets = list(itertools.product(*test_numbers))
+    #test_value_sets = [(Integer(1), Integer(3), Integer(1))]
+    counter = 0
+    
+    def do_compare(test_value_set):
+        return compare_for_symbols_with_test_values(expr1, expr2, symbols, test_value_set)
+
     for test_value_set in test_value_sets:
-        this_result = compare_for_symbols_with_test_values(expr1, expr2, symbols, test_value_set)
+        counter = counter+1
+        #print("Comparing " + str(counter))
+        this_result = do_compare(test_value_set)
         if not (this_result is None):
             return this_result
+    
     return None
 
 def remove(expr, search):
@@ -95,13 +110,6 @@ def remove(expr, search):
     2) An argument to Rational()
     3) An argument to some other function
 
-    We support only the first three cases for now.
-
-    In the first case of Add(), if the search expression is the only argument, 
-    remove it and replace it with zero. Otherwise remove it only.
-
-    In the first case of Mul(), if the search expression is the only argument, 
-    remove it and replace it with zero. Otherwise remove it only.
     '''
 
     if expr.is_Atom or expr.is_Dummy:
