@@ -102,8 +102,10 @@ def compare(expr1, expr2, *symbols):
             return this_result
     
     return None
+    
 
-def remove(expr, search):
+def remove(expr, *search):
+
     '''Remove an expression from another expression
     
     Keyword arguments:
@@ -121,16 +123,23 @@ def remove(expr, search):
 
     '''
 
-    if expr.is_Atom or expr.is_Dummy:
-        return expr
-    elif expr.is_Mul or expr.is_Add:
-        newargs = map(lambda arg: remove(arg, search), filter(lambda n: n!=search, expr.args))
-        return expr.func(*newargs)
-    else:
-        newargs = map(lambda arg: remove(arg, search), expr.args)
-        return expr.func(*newargs)
-    
+    def _remove(expr, search):
 
+        if expr.is_Atom or expr.is_Dummy:
+            return expr
+        elif expr.is_Mul or expr.is_Add:
+            newargs = map(lambda arg: remove(arg, search), filter(lambda n: n!=search, expr.args))
+            return expr.func(*newargs)
+        else:
+            newargs = map(lambda arg: remove(arg, search), expr.args)
+            return expr.func(*newargs)
+    
+    expr = _remove(expr, search[0])
+    if len(search) == 1:
+        return expr
+    else:
+        return remove(expr, *search[1:])
+    
 def change(expr, op, *test_symbols):
     new_expr = op(expr)
     this_result = compare(expr, new_expr, *test_symbols)

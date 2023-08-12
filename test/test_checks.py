@@ -41,6 +41,12 @@ class TestCheckFunctions(unittest.TestCase):
         modified_expr = remove(expr, 1/(a**4))
         self.assertEqual(Integral(-hbar**2*n**2*x**2*exp(-x**2/a**2), (x, -oo, oo)),
             modified_expr)
+        
+    def test_remove_multiple(self):
+        x, y, z = symbols("x y z")
+        expr = x * y * z
+        modified_expr = remove(expr, x, y)
+        self.assertEqual(z, modified_expr)
 
     def test_remove_from_sum_in_denominator(self):
         '''Where an expression is removed from a sum in a denominator.
@@ -77,6 +83,32 @@ class TestCheckFunctions(unittest.TestCase):
         expr1 = Integral(exp(-alpha*x**2 + beta*x), (x, -oo, oo))
         expr2 = sqrt(pi)*exp(beta**2/(4*alpha))/sqrt(alpha)
         result = compare(expr1, expr2, alpha, beta)
+        self.assertEqual(None, result)
+
+    def test_moving_constants_around(self):
+        '''Sanity test. Make sure a wrong factor results in a failures.
+        
+        '''
+        x = symbols("x", real=True)
+        p = symbols("p", real=True)
+        a = symbols("a", positive=True)
+        n = symbols("N", real=True)
+        expr1 = hbar*n**2*Integral(exp(-a**2*x**2/hbar**2), (x, -oo, oo))/2
+        expr2 = hbar**2*Integral(n**2*a**2*exp(-a**2*p**2/hbar**2)/hbar, (p, -oo, oo))/a**2
+        result = compare(expr1, expr2, a, n)
+        self.assertNotEqual(None, result)
+
+    def test_moving_constants_around_2(self):
+        '''Sanity test. Make sure it doesn't matter which variable name we integrate over.
+        
+        '''
+        x = symbols("x", real=True)
+        p = symbols("p", real=True)
+        a = symbols("a", positive=True)
+        n = symbols("N", real=True)
+        expr1 = hbar*n**2*Integral(exp(-a**2*x**2/hbar**2), (x, -oo, oo))/2
+        expr2 = hbar**2*Integral(n**2*a**2*exp(-a**2*p**2/hbar**2)/hbar, (p, -oo, oo))/(2*a**2)
+        result = compare(expr1, expr2, a, n)
         self.assertEqual(None, result)
 
 if __name__ == '__main__':
