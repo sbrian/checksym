@@ -1,5 +1,6 @@
 import itertools
 from sympy import *
+from pprint import pp
 
 def get_test_numbers_for_assumptions(assumptions0):
     '''Return a representative set of numbers for the assumptions.
@@ -8,6 +9,27 @@ def get_test_numbers_for_assumptions(assumptions0):
     that causes non-deterministic tests. The items in the lists should
     all be unique, though, although I have not verified that.
     '''
+    if assumptions0.get('imaginary'):
+        return map(lambda n: n * I, get_real_test_numbers_for_assumptions(assumptions0))
+    
+    if assumptions0.get('real'):
+        return get_real_test_numbers_for_assumptions(assumptions0)
+
+    imaginary_set = get_real_test_numbers_for_assumptions(map_special(assumptions0, 'imaginary_part_'))
+
+    real_set = get_real_test_numbers_for_assumptions(map_special(assumptions0, 'real_part_'))
+
+    return map(lambda n: n[0] + I * n[1], itertools.product(real_set, imaginary_set))
+
+def map_special(assumptions0, prefix):
+    new_assumptions = assumptions0.copy()
+    for k in assumptions0:
+        if k.startswith(prefix):
+            new_assumptions[k.removeprefix(prefix)] = assumptions0[k]
+    dummy_symbol = Symbol("__dummy_symbol_for_checksym_assumptions", **new_assumptions)
+    return dummy_symbol.assumptions0
+
+def get_real_test_numbers_for_assumptions(assumptions0):
     #integer_set = {1, 2, 10, 97, 100, 1000}
     integer_set = [Integer(1), Integer(3)]
     #integer_set = [Integer(1)]
@@ -19,7 +41,7 @@ def get_test_numbers_for_assumptions(assumptions0):
     #transcendental_test_set = {pi, 0.375*pi, E, 0.783*E, Rational(9,7)*E}
     transcendental_test_set = [pi, E]
     my_set = []
-    if assumptions0.get('complex') and not assumptions0.get('noninteger'):
+    if not assumptions0.get('noninteger'):
         my_set.extend(integer_set)
     if not assumptions0.get('integer'):
         my_set.extend(rational_test_set)
@@ -31,8 +53,5 @@ def get_test_numbers_for_assumptions(assumptions0):
         my_set.extend(list(map(lambda n: -n, my_set)))
     if not assumptions0.get('nonzero'):
         my_set.extend([Integer(0)])
-    if assumptions0.get('real'):
-        return my_set
-    if assumptions0.get('imaginary'):
-        return map(lambda n: n * I, my_set)
-    return map(lambda n: n[0] + I * n[1], itertools.product(my_set, my_set))
+
+    return my_set

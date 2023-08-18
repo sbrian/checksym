@@ -1,9 +1,9 @@
 import unittest
-from sympy import symbols, Rational, I, E
+from sympy import symbols, Rational, I, E, Symbol
 from pprint import pp
 from checksym.util import get_test_numbers_for_assumptions
 
-class TestCheckFunctions(unittest.TestCase):
+class TestAssumptionFunctions(unittest.TestCase):
     
     def test_get_test_numbers_for_positive_integer(self):
         x = symbols("x", integer=True, positive=True)
@@ -27,9 +27,17 @@ class TestCheckFunctions(unittest.TestCase):
         self.assertTrue(I in test_numbers)
         self.assertTrue(E + I in test_numbers)
 
-    def test_get_test_numbers_for_complex_positive_real_part(self):
-        x = symbols("x", complex=True, positive_real_part=True)
+    def test_get_test_numbers_for_complex_real_part_positive(self):
+        x = symbols("x", complex=True, real_part_positive=True)
         test_numbers = list(get_test_numbers_for_assumptions(x.assumptions0))
         self.assertFalse(0 in test_numbers)
         self.assertFalse(I in test_numbers)
+        self.assertTrue(E + I in test_numbers)
+
+    def test_get_test_numbers_for_complex_imaginary_part_positive(self):
+        x = symbols("x", complex=True, imaginary_part_positive=True)
+        test_numbers = list(get_test_numbers_for_assumptions(x.assumptions0))
+        self.assertFalse(0 in test_numbers)
+        self.assertTrue(I in test_numbers)
+        self.assertFalse(1 in test_numbers)
         self.assertTrue(E + I in test_numbers)

@@ -47,6 +47,15 @@ def compare(expr1, expr2, *symbols):
     '''
     Compare the two expressions numerically, making replacements for the given symbols.
 
+    Test values are automatically populated for all the given symbols, using their assumptions.
+
+    Additional assumptions can be applied to the real and imaginary parts of complex numbers, by 
+    prepending "real_part_" or "imaginary_part_" from the usual supported assumptions.
+
+    For example: x = symbols("x", complex=True, real_part_positive=True)
+
+    See sympy/core/assumptions.py in the sympy source for the standard assumptions. 
+
     The error 'TypeError: loop of ufunc does not support argument 0 of type Mul which has no callable exp method'
     in lambdify might mean that the list of symbols is incomplete.
     '''
