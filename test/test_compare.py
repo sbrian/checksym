@@ -53,8 +53,17 @@ class TestCompareFunctions(unittest.TestCase):
     def test_compare_to_significance_j(self):
         self.assertFalse(compare_to_significance(2.24+2.24j, 2.24+2.23j, 3))
 
-    def test_compare_to_significance_j(self):
+    def test_compare_to_significance_k(self):
         self.assertFalse(compare_to_significance(2.23+2.24j, 2.22+2.24j, 3))
 
-    def test_compare_to_significance_j(self):
+    def test_compare_to_significance_l(self):
         self.assertFalse(compare_to_significance(1-1j, 1+1j, 3))
+
+    def test_compare_to_significance_m(self):
+        self.assertTrue(compare_to_significance(0.9999999999999998+0j, 1+0j, 3))
+
+    def test_compare_to_significance_n(self):
+        self.assertTrue(compare_to_significance(1+0j, 0.9999999999999998+0j, 3))
+
+    def test_compare_to_significance_o(self):
+        self.assertFalse(compare_to_significance(1+0j, 0.9999999999999998+0j, 17))

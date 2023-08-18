@@ -14,6 +14,7 @@ def compare_to_significance(a, b, places):
     '''Returns True only if the arguments are indentical to the requested number of places
     
     '''
+    
     if a == 0 and b == 0:
         return True
     
@@ -23,6 +24,11 @@ def compare_to_significance(a, b, places):
     if a.imag or b.imag:
         return (compare_to_significance(a.real, b.real, places)
             and compare_to_significance(a.imag, b.imag, places))
+    
+    # Clear out any 0 imaginary part that might cause a type check error
+    # like: TypeError: '>' not supported between instances of 'complex' and 'int'
+    a = a.real
+    b = b.real
     
     if a > 0 and b < 0:
         return False
@@ -39,10 +45,15 @@ def compare_to_significance(a, b, places):
 
     # If the numbers were not the same magnitude, return false
     if a_places != b_places:
-        return False
-    
+        if a_places == b_places - 1:
+            a_converted = a_converted / 10
+        elif a_places == b_places + 1:
+            b_converted = b_converted / 10
+        else:
+            return False
+
     # Convert to integers of the desired number of digits
-    a_converted_2 = int(a_converted*10**(places-1))
-    b_converted_2 = int(b_converted*10**(places-1))
+    a_converted_2 = round(a_converted*10**(places-1))
+    b_converted_2 = round(b_converted*10**(places-1))
 
     return a_converted_2 == b_converted_2
