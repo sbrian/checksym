@@ -1,2 +1,2 @@
-from .checks import change, remove, compare, get_test_numbers_for_assumptions
+from .checks import change, remove, compare, Compare, get_test_numbers_for_assumptions
 

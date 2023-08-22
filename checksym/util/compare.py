@@ -1,19 +1,21 @@
 from math import floor, log10
 
 def convert_to_order_one(n):
-    '''Shift the decimal point until exactly one digit is to the right
+    """
+    Shift the decimal point until exactly one digit is to the right
     
     Return the new value and the number of places shifted
-    '''
+    """
 
     places = floor(log10(n))
 
     return (n * 10 ** (-places), places)
 
 def compare_to_significance(a, b, places):
-    '''Returns True only if the arguments are indentical to the requested number of places
+    """
+    Returns True only if the arguments are indentical to the requested number of places
     
-    '''
+    """
     
     if a == 0 and b == 0:
         return True

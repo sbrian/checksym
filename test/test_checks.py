@@ -1,17 +1,21 @@
 import unittest
-from checksym import remove, compare, get_test_numbers_for_assumptions
+from checksym import remove, Compare, get_test_numbers_for_assumptions
 from sympy import Integral, symbols, exp, oo, E, sqrt, I, pi
 from sympy.physics.quantum import hbar
 from pprint import pp
 
 class TestCheckFunctions(unittest.TestCase):
 
+    def setUp(self):
+        self.compare = Compare(test_count_limit=20)
+
     def test_compare_with_symbols_one_symbol(self):
-        '''Case of only one symbols. Debug not iterable error.
+        """
+        Case of only one symbols. Debug not iterable error.
 
         Test derived from actual use case, involving uncertainty
         calculation.
-        '''
+        """
         x = symbols("x", real=True)
         a = symbols("a", positive=True)
         alpha = symbols("alpha")
@@ -19,14 +23,15 @@ class TestCheckFunctions(unittest.TestCase):
         formula = formula.subs(alpha, 1/(a**2))
         formula2 = 1/(2*alpha) * Integral(E**(- alpha * x**2), (x, -oo, oo))
         formula2 = formula2.subs(alpha, 1/(a**2))
-        result = compare(formula, formula2, a)
+        result = self.compare.compare(formula, formula2, a)
         self.assertEqual(None, result)
 
     def test_remove_fraction_from_mul_in_integral(self):
-        '''Where a fraction within a Mul() within an integral is removed
+        """
+        Where a fraction within a Mul() within an integral is removed
         
         In this case, remove 1/a**4 from inside the integral.
-        '''
+        """
         x = symbols("x", real=True)
         a = symbols("a", positive=True)
         n = symbols("N", real=True)
@@ -42,9 +47,10 @@ class TestCheckFunctions(unittest.TestCase):
         self.assertEqual(z, modified_expr)
 
     def test_remove_from_sum_in_denominator(self):
-        '''Where an expression is removed from a sum in a denominator.
+        """
+        Where an expression is removed from a sum in a denominator.
 
-        '''
+        """
         a, b, c = symbols("a b c", real=True)
         expr = a / ( b + c )
         modified_expr = remove(expr, b)
@@ -53,9 +59,10 @@ class TestCheckFunctions(unittest.TestCase):
     # I can't get this one working 
     #
     # def test_constant_in_and_out_of_integral(self):
-    #     '''A case where constant gives a different result, in and out of the integral
-        
-    #     '''
+    #     """
+    #     A case where constant gives a different result, in and out of the integral
+    #
+    #     """
     #     x = symbols("x", real=True)
     #     p = symbols("p", real=True)
     #     a = symbols("a", positive=True)
@@ -75,33 +82,53 @@ class TestCheckFunctions(unittest.TestCase):
         x = symbols("x")
         expr1 = Integral(exp(-alpha*x**2 + beta*x), (x, -oo, oo))
         expr2 = sqrt(pi)*exp(beta**2/(4*alpha))/sqrt(alpha)
-        result = compare(expr1, expr2, alpha, beta)
+        result = self.compare.compare(expr1, expr2, alpha, beta)
         self.assertEqual(None, result)
 
     def test_moving_constants_around(self):
-        '''Sanity test. Make sure a wrong factor results in a failures.
+        """
+        Sanity test. Make sure a wrong factor results in a failures.
         
-        '''
+        """
         x = symbols("x", real=True)
         p = symbols("p", real=True)
         a = symbols("a", positive=True)
         n = symbols("N", real=True)
         expr1 = hbar*n**2*Integral(exp(-a**2*x**2/hbar**2), (x, -oo, oo))/2
         expr2 = hbar**2*Integral(n**2*a**2*exp(-a**2*p**2/hbar**2)/hbar, (p, -oo, oo))/a**2
-        result = compare(expr1, expr2, a, n)
+        result = self.compare.compare(expr1, expr2, a, n)
         self.assertNotEqual(None, result)
 
     def test_moving_constants_around_2(self):
-        '''Sanity test. Make sure it doesn't matter which variable name we integrate over.
+        """
+        Sanity test. Make sure it doesn't matter which variable name we integrate over.
         
-        '''
+        """
         x = symbols("x", real=True)
         p = symbols("p", real=True)
         a = symbols("a", positive=True)
         n = symbols("N", real=True)
         expr1 = hbar*n**2*Integral(exp(-a**2*x**2/hbar**2), (x, -oo, oo))/2
         expr2 = hbar**2*Integral(n**2*a**2*exp(-a**2*p**2/hbar**2)/hbar, (p, -oo, oo))/(2*a**2)
-        result = compare(expr1, expr2, a, n)
+        result = self.compare.compare(expr1, expr2, a, n)
+        self.assertEqual(None, result)
+
+    def test_complex_number(self):
+        z = symbols("z", complex=True)
+        n = symbols("n", positive=True)
+        x = symbols("x", real=True)
+        expr1 = 2*(n+E**z*x**2)
+        expr2 = 2*n+2*E**z*x**2
+        result = self.compare.compare(expr1, expr2, z, n, x)
+        self.assertEqual(None, result)
+
+    def test_complex_number_with_gaussian(self):
+        z = symbols("z", complex=True)
+        n = symbols("n", positive=True)
+        x = symbols("x", real=True)
+        expr1 = Integral(n*E**(z*x**2), (x, -1, 1))
+        expr2 = n*Integral(E**(z*x**2), (x, -1, 1))
+        result = self.compare.compare(expr1, expr2, z, n)
         self.assertEqual(None, result)
 
 if __name__ == '__main__':

@@ -5,6 +5,8 @@ import sympy
 import numpy
 import mpmath
 from checksym.util import compare_to_significance, get_test_numbers_for_assumptions
+from pprint import pp
+import datetime
 
 def get_test_numbers_for_symbol(symbol):
     return get_test_numbers_for_assumptions(symbol.assumptions0)
@@ -42,44 +44,78 @@ def compare_for_symbols_with_test_values(expr1, expr2, symbols, test_value_set):
         }
     return None
 
-@functools.lru_cache(maxsize=None)
+
+class Compare:
+
+    def __init__(self, *, test_time_limit=None, test_count_limit=None):
+        """
+        Args:
+        test_time_limit: Execute no more than this many tests
+        test_count_limit: Stop executing tests after this much time as passed
+        """
+        self.test_time_limit = test_time_limit
+        self.test_count_limit = test_count_limit
+
+    @functools.lru_cache(maxsize=None)
+    def compare(self, expr1, expr2, *symbols):
+        """
+        Compare the two expressions numerically, making replacements for the given symbols.
+
+        Test values are automatically populated for all the given symbols, using their assumptions.
+
+        Additional assumptions can be applied to the real and imaginary parts of complex numbers, by 
+        prepending "real_part_" or "imaginary_part_" from the usual supported assumptions.
+
+        For example: x = symbols("x", complex=True, real_part_positive=True)
+
+        See sympy/core/assumptions.py in the sympy source for the standard assumptions. 
+
+        The error 'TypeError: loop of ufunc does not support argument 0 of type Mul which has no callable exp method'
+        in lambdify might mean that the list of symbols is incomplete.
+        """
+
+        max_tests = 100
+
+        test_numbers = map(lambda sym: get_test_numbers_for_symbol(sym), symbols)
+        test_value_sets = list(itertools.product(*test_numbers))
+        #test_value_sets = [(Integer(1), Integer(3), Integer(1))]
+        counter = 0
+        
+        # Sort the list by hashes of the tuples, so we can pick a consistent
+        # set of them to run
+        test_value_sets = sorted(test_value_sets, key=lambda x: hash(x))
+
+        # cut down the list to a max
+        if self.test_count_limit != None:
+            test_value_sets = test_value_sets[:self.test_count_limit]
+
+        def do_compare(test_value_set):
+            return compare_for_symbols_with_test_values(expr1, expr2, symbols, test_value_set)
+
+        if self.test_time_limit != None:
+            start = datetime.datetime.now()
+
+        for test_value_set in test_value_sets:
+            counter = counter+1
+            this_result = do_compare(test_value_set)
+            if not (this_result is None):
+                return this_result
+            
+            if self.test_time_limit != None:
+                now = datetime.datetime.now()
+                if now.timestamp() - start.timestamp() > self.test_time_limit:
+                    return None
+        
+        return None
+
 def compare(expr1, expr2, *symbols):
-    '''
-    Compare the two expressions numerically, making replacements for the given symbols.
-
-    Test values are automatically populated for all the given symbols, using their assumptions.
-
-    Additional assumptions can be applied to the real and imaginary parts of complex numbers, by 
-    prepending "real_part_" or "imaginary_part_" from the usual supported assumptions.
-
-    For example: x = symbols("x", complex=True, real_part_positive=True)
-
-    See sympy/core/assumptions.py in the sympy source for the standard assumptions. 
-
-    The error 'TypeError: loop of ufunc does not support argument 0 of type Mul which has no callable exp method'
-    in lambdify might mean that the list of symbols is incomplete.
-    '''
-    test_numbers = map(lambda sym: get_test_numbers_for_symbol(sym), symbols)
-    test_value_sets = list(itertools.product(*test_numbers))
-    #test_value_sets = [(Integer(1), Integer(3), Integer(1))]
-    counter = 0
-    
-    def do_compare(test_value_set):
-        return compare_for_symbols_with_test_values(expr1, expr2, symbols, test_value_set)
-
-    for test_value_set in test_value_sets:
-        counter = counter+1
-        #print("Comparing " + str(counter))
-        this_result = do_compare(test_value_set)
-        if not (this_result is None):
-            return this_result
-    
-    return None
-    
+    compare = Compare()
+    return compare.compare(expr1, expr2, *symbols)
 
 def remove(expr, *search):
 
-    '''Remove an expression from another expression
+    """
+    Remove an expression from another expression
     
     Keyword arguments:
     expr -- the expression to search through
@@ -94,7 +130,7 @@ def remove(expr, *search):
     2) An argument to Rational()
     3) An argument to some other function
 
-    '''
+    """
 
     def _remove(expr, search):
 

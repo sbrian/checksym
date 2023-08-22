@@ -1,1 +1,1 @@
-from .main import change, remove, compare, get_test_numbers_for_assumptions
+from .main import change, remove, compare, Compare, get_test_numbers_for_assumptions

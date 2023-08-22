@@ -2,13 +2,14 @@ import itertools
 from sympy import *
 from pprint import pp
 
-def get_test_numbers_for_assumptions(assumptions0):
-    '''Return a representative set of numbers for the assumptions.
+def get_test_numbers_for_assumptions(assumptions0, max_count=None):
+    """
+    Return a representative set of numbers for the assumptions.
     
     These "sets" are actually lists, because Python sets are unordered and
     that causes non-deterministic tests. The items in the lists should
     all be unique, though, although I have not verified that.
-    '''
+    """
     if assumptions0.get('imaginary'):
         return map(lambda n: n * I, get_real_test_numbers_for_assumptions(assumptions0))
     
