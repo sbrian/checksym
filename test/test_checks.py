@@ -7,7 +7,7 @@ from pprint import pp
 class TestCheckFunctions(unittest.TestCase):
 
     def setUp(self):
-        self.compare = Compare(test_count_limit=20)
+        self.compare = Compare()
 
     def test_compare_with_symbols_one_symbol(self):
         """

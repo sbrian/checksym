@@ -4,12 +4,9 @@ import functools
 import sympy
 import numpy
 import mpmath
-from checksym.util import compare_to_significance, get_test_numbers_for_assumptions
+from checksym.util import compare_to_significance, get_test_numbers_for_assumptions, build_test_value_sets
 from pprint import pp
 import datetime
-
-def get_test_numbers_for_symbol(symbol):
-    return get_test_numbers_for_assumptions(symbol.assumptions0)
 
 def test_values_replace(expr, symbols, test_value_set):
     replacement_tuples = []
@@ -44,17 +41,15 @@ def compare_for_symbols_with_test_values(expr1, expr2, symbols, test_value_set):
         }
     return None
 
-
 class Compare:
 
-    def __init__(self, *, test_time_limit=None, test_count_limit=None):
+    def __init__(self, *, test_time_limit=None):
         """
         Args:
         test_time_limit: Execute no more than this many tests
         test_count_limit: Stop executing tests after this much time as passed
         """
         self.test_time_limit = test_time_limit
-        self.test_count_limit = test_count_limit
 
     @functools.lru_cache(maxsize=None)
     def compare(self, expr1, expr2, *symbols):
@@ -74,20 +69,9 @@ class Compare:
         in lambdify might mean that the list of symbols is incomplete.
         """
 
-        max_tests = 100
+        test_value_sets = build_test_value_sets(*symbols)
 
-        test_numbers = map(lambda sym: get_test_numbers_for_symbol(sym), symbols)
-        test_value_sets = list(itertools.product(*test_numbers))
-        #test_value_sets = [(Integer(1), Integer(3), Integer(1))]
         counter = 0
-        
-        # Sort the list by hashes of the tuples, so we can pick a consistent
-        # set of them to run
-        test_value_sets = sorted(test_value_sets, key=lambda x: hash(x))
-
-        # cut down the list to a max
-        if self.test_count_limit != None:
-            test_value_sets = test_value_sets[:self.test_count_limit]
 
         def do_compare(test_value_set):
             return compare_for_symbols_with_test_values(expr1, expr2, symbols, test_value_set)
