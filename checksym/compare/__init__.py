@@ -1,1 +1,1 @@
-from .compare import change, remove, Compare
+from .compare import Compare
