@@ -4,7 +4,7 @@ import functools
 import sympy
 import numpy
 import mpmath
-from checksym.util import compare_to_significance, get_test_numbers_for_assumptions, build_test_value_sets
+from checksym.util import compare_to_significance, build_test_value_sets
 from pprint import pp
 import datetime
 
@@ -85,10 +85,6 @@ class Compare:
     def cleanup_for_lambdify(self, expr):
         real_imag = expr.as_real_imag()
         return float(real_imag[0]) + 1j * float(real_imag[1])
-
-def compare(expr1, expr2, *symbols):
-    compare = Compare()
-    return compare.compare(expr1, expr2, *symbols)
 
 def remove(expr, *search):
 

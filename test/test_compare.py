@@ -1,5 +1,5 @@
 import unittest
-from checksym import remove, Compare, get_test_numbers_for_assumptions
+from checksym import remove, Compare
 from sympy import Integral, symbols, exp, oo, E, sqrt, I, pi, conjugate, Abs, im
 from sympy.physics.quantum import hbar
 from pprint import pp
