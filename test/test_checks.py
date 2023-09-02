@@ -1,6 +1,6 @@
 import unittest
 from checksym import remove, Compare, get_test_numbers_for_assumptions
-from sympy import Integral, symbols, exp, oo, E, sqrt, I, pi
+from sympy import Integral, symbols, exp, oo, E, sqrt, I, pi, conjugate, Abs, im
 from sympy.physics.quantum import hbar
 from pprint import pp
 
@@ -99,6 +99,18 @@ class TestCheckFunctions(unittest.TestCase):
         result = self.compare.compare(expr1, expr2, a, n)
         self.assertNotEqual(None, result)
 
+    def test_integrate_small_value(self):
+        """
+        Sanity test. Make sure a wrong factor results in a failures.
+        
+        """
+        x = symbols("x", real=True)
+        a = symbols("a", real=True, positive=True)
+        expr1 = Integral(exp(-x**2/hbar**2), (x, -oo, oo))/2
+        expr2 = Integral(exp(-x**2/hbar**2), (x, -oo, oo))
+        result = self.compare.compare(expr1, expr2, a)
+        self.assertNotEqual(None, result)
+
     def test_moving_constants_around_2(self):
         """
         Sanity test. Make sure it doesn't matter which variable name we integrate over.
@@ -126,9 +138,65 @@ class TestCheckFunctions(unittest.TestCase):
         z = symbols("z", complex=True)
         n = symbols("n", positive=True)
         x = symbols("x", real=True)
-        expr1 = Integral(n*E**(z*x**2), (x, -1, 1))
-        expr2 = n*Integral(E**(z*x**2), (x, -1, 1))
+        expr1 = Integral(n*E**(z*x**2), (x, -oo, oo))
+        expr2 = n*Integral(E**(z*x**2), (x, -oo, oo))
         result = self.compare.compare(expr1, expr2, z, n)
+        self.assertEqual(None, result)
+
+    def test_complex_number_with_gaussian_reversed(self):
+        z = symbols("z", complex=True)
+        n = symbols("n", positive=True)
+        x = symbols("x", real=True)
+        expr1 = Integral(n*E**(z*x**2), (x, oo, -oo))
+        expr2 = n*Integral(E**(z*x**2), (x, oo, -oo))
+        result = self.compare.compare(expr1, expr2, z, n)
+        self.assertEqual(None, result)
+
+    def test_complex_number_with_gaussian_2(self):
+        x = symbols("x", real=True)
+        Delta = symbols("Delta", complex=True, real_part_positive=True)
+        expr1 = Integral(exp(-x**2/(Delta**2))*exp(-x**2/(conjugate(Delta)**2)), (x, -oo, oo))
+        expr2 = Integral(exp(-x**2*(conjugate(Delta)**2 + Delta**2)/(Abs(Delta)**4)), (x, -oo, oo))
+        result = self.compare.compare(expr1, expr2, Delta)
+        self.assertEqual(None, result)
+
+    def test_complex_number_with_gaussian_3(self):
+        n = symbols("n", positive=True)
+        x = symbols("x", real=True)
+        Delta = symbols("Delta", complex=True, real_part_positive=True)
+        expr1 = Integral(n**2*x**2*exp(-x**2/(2*Delta**2))*exp(-x**2/(2*conjugate(Delta)**2)), (x, -oo, oo))
+        expr2 = Integral(n**2*x**2*exp(-x**2*(conjugate(Delta)**2 + Delta**2)/(2*Abs(Delta)**4)), (x, -oo, oo))
+        result = self.compare.compare(expr1, expr2, n, Delta)
+        self.assertEqual(None, result)
+
+    def test_complex_number_will_fail(self):
+        z = symbols("z", complex=True)
+        expr1 = z
+        expr2 = 2*z
+        result = self.compare.compare(expr1, expr2, z)
+        self.assertNotEqual(None, result)
+
+    def test_complex_number_will_fail_2(self):
+        z = symbols("z", complex=True)
+        expr1 = im(z)
+        expr2 = im(2*z)
+        result = self.compare.compare(expr1, expr2, z)
+        self.assertNotEqual(None, result)
+
+    def test_complex_number_will_fail_3(self):
+        z = symbols("z", complex=True)
+        x = symbols("x", real=True)
+        expr1 = Integral(im(z), (x, -1, 1))
+        expr2 = Integral(im(2*z), (x, -1, 1))
+        result = self.compare.compare(expr1, expr2, z)
+        self.assertNotEqual(None, result)
+
+    def test_complex_number_integral(self):
+        z = symbols("z", complex=True)
+        x = symbols("x", real=True)
+        expr1 = 2*Integral(im(z), (x, -1, 1))
+        expr2 = Integral(im(2*z), (x, -1, 1))
+        result = self.compare.compare(expr1, expr2, z)
         self.assertEqual(None, result)
 
 if __name__ == '__main__':
