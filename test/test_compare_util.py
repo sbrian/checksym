@@ -1,7 +1,7 @@
 import unittest
 from checksym.util import convert_to_order_one, compare_to_significance
 
-class TestCompareFunctions(unittest.TestCase):
+class TestCompareUtil(unittest.TestCase):
 
     def test_convert_to_order_one_a(self):
         (result, places) = convert_to_order_one(0.0001234)
