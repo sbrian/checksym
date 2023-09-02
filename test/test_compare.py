@@ -4,7 +4,7 @@ from sympy import Integral, symbols, exp, oo, E, sqrt, I, pi, conjugate, Abs, im
 from sympy.physics.quantum import hbar
 from pprint import pp
 
-class TestCheckFunctions(unittest.TestCase):
+class TestCompare(unittest.TestCase):
 
     def setUp(self):
         self.compare = Compare()

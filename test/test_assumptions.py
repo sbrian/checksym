@@ -3,7 +3,7 @@ from sympy import symbols, Rational, I, E, Symbol
 from pprint import pp
 from checksym.util import get_test_numbers_for_assumptions, build_test_value_sets
 
-class TestAssumptionFunctions(unittest.TestCase):
+class TestAssumptions(unittest.TestCase):
     
     def test_get_test_numbers_for_positive_integer(self):
         x = symbols("x", integer=True, positive=True)
