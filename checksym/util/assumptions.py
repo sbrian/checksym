@@ -63,6 +63,8 @@ def build_test_value_sets(*symbols):
     Build a list of tuples where each element in the tuple
     is a test value for one of the symbols passed as an argument.
 
+    This list is all sympy types. They can be coverted later to proper types.
+
     For example, if the symbols are [x, y] where x and y are both non-negative
     integers, the return might be:
 

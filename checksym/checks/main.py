@@ -8,39 +8,6 @@ from checksym.util import compare_to_significance, get_test_numbers_for_assumpti
 from pprint import pp
 import datetime
 
-def test_values_replace(expr, symbols, test_value_set):
-    replacement_tuples = []
-    for n in range(0, len(symbols)):
-        replacement_tuples.append((symbols[n], test_value_set[n]))
-    return expr.subs(replacement_tuples)
-
-def cleanup_for_lambdify(expr):
-    real_imag = expr.as_real_imag()
-    return float(real_imag[0]) + 1j * float(real_imag[1])
-
-def compare_for_symbols_with_test_values(expr1, expr2, symbols, test_value_set):
-    significance = 10
-    expr1_evaled = expr1.doit()
-    expr2_evaled = expr2.doit()
-    if len(symbols) != len(test_value_set):
-        raise Exception("Invalid test_value_set length")
-    lambdify_modules = ['scipy', 'numpy']
-    test_value_set_for_lambify = list(map(cleanup_for_lambdify, test_value_set))
-    this_expr1_lambdify_evaled = lambdify(symbols, expr1_evaled, lambdify_modules)(*test_value_set_for_lambify)
-    this_expr2_lambdify_evaled = lambdify(symbols, expr2_evaled, lambdify_modules)(*test_value_set_for_lambify)
-    if not compare_to_significance(this_expr1_lambdify_evaled, this_expr2_lambdify_evaled, significance):
-        return {
-            'symbols' : symbols,
-            'test_value_set': test_value_set,
-            'expr1': expr1,
-            'expr1_evaluated': expr1,
-            'expr1_final': this_expr1_lambdify_evaled,
-            'expr2': expr2,
-            'expr2_evaluated': expr2,
-            'expr2_final': this_expr2_lambdify_evaled
-        }
-    return None
-
 class Compare:
 
     def __init__(self, *, test_time_limit=None):
@@ -74,7 +41,7 @@ class Compare:
         counter = 0
 
         def do_compare(test_value_set):
-            return compare_for_symbols_with_test_values(expr1, expr2, symbols, test_value_set)
+            return self.compare_for_symbols_with_test_values(expr1, expr2, symbols, test_value_set)
 
         if self.test_time_limit != None:
             start = datetime.datetime.now()
@@ -91,6 +58,33 @@ class Compare:
                     return None
         
         return None
+    
+    def compare_for_symbols_with_test_values(self, expr1, expr2, symbols, test_value_set):
+        significance = 10
+        expr1_evaled = expr1.doit()
+        expr2_evaled = expr2.doit()
+        if len(symbols) != len(test_value_set):
+            raise Exception("Invalid test_value_set length")
+        lambdify_modules = ['scipy', 'numpy']
+        test_value_set_for_lambify = list(map(self.cleanup_for_lambdify, test_value_set))
+        this_expr1_lambdify_evaled = lambdify(symbols, expr1_evaled, lambdify_modules)(*test_value_set_for_lambify)
+        this_expr2_lambdify_evaled = lambdify(symbols, expr2_evaled, lambdify_modules)(*test_value_set_for_lambify)
+        if not compare_to_significance(this_expr1_lambdify_evaled, this_expr2_lambdify_evaled, significance):
+            return {
+                'symbols' : symbols,
+                'test_value_set': test_value_set,
+                'expr1': expr1,
+                'expr1_evaluated': expr1,
+                'expr1_final': this_expr1_lambdify_evaled,
+                'expr2': expr2,
+                'expr2_evaluated': expr2,
+                'expr2_final': this_expr2_lambdify_evaled
+            }
+        return None
+    
+    def cleanup_for_lambdify(self, expr):
+        real_imag = expr.as_real_imag()
+        return float(real_imag[0]) + 1j * float(real_imag[1])
 
 def compare(expr1, expr2, *symbols):
     compare = Compare()
