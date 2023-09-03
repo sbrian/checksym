@@ -86,7 +86,7 @@ class Compare:
         real_imag = expr.as_real_imag()
         return float(real_imag[0]) + 1j * float(real_imag[1])
     
-    def change(expr, op, *symbols):
+    def change(self, expr, op, *symbols):
         """
         Apply the function op to expr, and then compare to see if the
         modified result is equivalent, substituting test values
