@@ -8,8 +8,8 @@ class Evalf(CompareInterface):
     def compare_for_symbols_with_test_values(self, expr1, expr2, symbols, test_value_set, significance):
         significance = 10
         full_test_values = zip(symbols, test_value_set)
-        expr1_evaled = expr1.subs(full_test_values).evalf()
-        expr2_evaled = expr2.subs(full_test_values).evalf()
+        expr1_evaled = expr1.doit().subs(full_test_values).evalf()
+        expr2_evaled = expr2.doit().subs(full_test_values).evalf()
         if not compare_to_significance(expr1_evaled, expr2_evaled, significance):
             return {
                 'symbols' : symbols,

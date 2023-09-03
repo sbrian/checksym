@@ -11,6 +11,12 @@ def convert_to_order_one(n):
 
     return (n * 10 ** (-places), places)
 
+
+def compare_to_significance_complex(a_real, a_imaginary, b_real, b_imaginary, places):
+    return (compare_to_significance(a_real, b_real, places)
+        and compare_to_significance(a_imaginary, b_imaginary, places))
+    
+
 def compare_to_significance(a, b, places):
     """
     Returns True only if the arguments are indentical to the requested number of places
@@ -22,15 +28,6 @@ def compare_to_significance(a, b, places):
     
     if a == 0 or b == 0:
         return False
-
-    if a.imag or b.imag:
-        return (compare_to_significance(a.real, b.real, places)
-            and compare_to_significance(a.imag, b.imag, places))
-    
-    # Clear out any 0 imaginary part that might cause a type check error
-    # like: TypeError: '>' not supported between instances of 'complex' and 'int'
-    a = a.real
-    b = b.real
     
     if a > 0 and b < 0:
         return False

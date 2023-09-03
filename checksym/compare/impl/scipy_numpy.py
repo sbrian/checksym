@@ -1,5 +1,5 @@
 from sympy import lambdify
-from checksym.util import compare_to_significance
+from checksym.util import compare_to_significance_complex
 from .compare_interface import CompareInterface
 
 class SciPyNumPy(CompareInterface):
@@ -13,7 +13,9 @@ class SciPyNumPy(CompareInterface):
         test_value_set_for_lambdify = list(map(self.cleanup_for_lambdify, test_value_set))
         this_expr1_lambdify_evaled = lambdify(symbols, expr1_evaled, lambdify_modules)(*test_value_set_for_lambdify)
         this_expr2_lambdify_evaled = lambdify(symbols, expr2_evaled, lambdify_modules)(*test_value_set_for_lambdify)
-        if not compare_to_significance(this_expr1_lambdify_evaled, this_expr2_lambdify_evaled, significance):
+        if not compare_to_significance_complex(
+            this_expr1_lambdify_evaled.real, this_expr1_lambdify_evaled.imag,
+            this_expr2_lambdify_evaled.real, this_expr1_lambdify_evaled.imag, significance):
             return {
                 'symbols' : symbols,
                 'test_value_set': test_value_set,
