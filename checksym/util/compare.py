@@ -22,7 +22,7 @@ def compare_to_significance(a, b, places):
     Returns True only if the arguments are indentical to the requested number of places
     
     """
-    
+
     if a == 0 and b == 0:
         return True
     

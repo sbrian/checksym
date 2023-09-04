@@ -43,7 +43,7 @@ class Compare:
 
         significance = 10
 
-        impl = SciPyNumPy()
+        impl = SciPyNumPy(expr1, expr2, symbols, significance)
 
         if self.test_time_limit != None:
             start = datetime.datetime.now()
@@ -54,7 +54,7 @@ class Compare:
             
             counter = counter+1
             
-            this_result = impl.compare_for_symbols_with_test_values(expr1, expr2, symbols, test_value_set, significance)
+            this_result = impl.compare_for_symbols_with_test_values(test_value_set)
 
             if not (this_result is None):
                 return this_result
