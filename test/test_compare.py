@@ -111,6 +111,18 @@ class TestCompare(unittest.TestCase):
         result = self.compare.compare(expr1, expr2, a)
         self.assertNotEqual(None, result)
 
+    def test_integrate_small_value_ensure_non_zero(self):
+        """
+        Sanity test. They are same, but will it fail due to values being zero?
+        
+        """
+        x = symbols("x", real=True)
+        a = symbols("a", real=True, positive=True)
+        expr1 = Integral(exp(-x**2/hbar**2), (x, -oo, oo))
+        expr2 = Integral(exp(-x**2/hbar**2), (x, -oo, oo))
+        result = self.compare.compare(expr1, expr2, a)
+        self.assertEqual(None, result)
+
     def test_moving_constants_around_2(self):
         """
         Sanity test. Make sure it doesn't matter which variable name we integrate over.

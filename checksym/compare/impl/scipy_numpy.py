@@ -16,3 +16,6 @@ class SciPyNumPy(CompareBase):
     def cleanup_for_lambdify(self, expr):
         real_imag = expr.as_real_imag()
         return float(real_imag[0]) + 1j * float(real_imag[1])
+    
+    def _check_for_zero(self, value):
+        return value == 0

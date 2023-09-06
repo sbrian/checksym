@@ -14,3 +14,5 @@ class Evalf(CompareBase):
         return (expr1_evaled, re(expr1_evaled), im(expr1_evaled),
                 expr2_evaled, re(expr2_evaled), im(expr2_evaled))
     
+    def _check_for_zero(self, value):
+        return value == 0

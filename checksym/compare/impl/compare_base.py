@@ -35,6 +35,10 @@ class CompareBase(ABC):
         result_dict['expr1_final'] = expr1_final
         result_dict['expr2_final'] = expr2_final
 
+        if self._check_for_zero(expr1_final) or self._check_for_zero(expr2_final):
+            result_dict['message'] = "Some expression evaluated to 0. This usually means values got out of supported ranges."
+            return result_dict
+
         try:
             if not compare_to_significance_complex(
                 expr1_real, expr1_imag,
@@ -52,4 +56,8 @@ class CompareBase(ABC):
 
     @abstractmethod
     def _evaluate(self):
+        pass
+
+    @abstractmethod
+    def _check_for_zero(self, value):
         pass
