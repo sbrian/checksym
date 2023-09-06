@@ -1,7 +1,8 @@
 import unittest
-from checksym.util import convert_to_order_one, compare_to_significance
+from checksym.util import (convert_to_order_one, compare_to_significance,
+    compare_to_significance_complex)
 
-class TestCompareUtil(unittest.TestCase):
+class TestCompareToSignificance(unittest.TestCase):
 
     def test_convert_to_order_one_a(self):
         (result, places) = convert_to_order_one(0.0001234)
@@ -41,29 +42,29 @@ class TestCompareUtil(unittest.TestCase):
     def test_compare_to_significance_f(self):
         self.assertFalse(compare_to_significance(10000.000000001, 10000.00000011, 13))
 
-    def test_compare_to_significance_g(self):
-        self.assertTrue(compare_to_significance(1 + 2j, 1 + 2j, 1))
+    def compare_to_significance_complex(self):
+        self.assertTrue(compare_to_significance(1, 2, 1, 2j, 1))
 
     def test_compare_to_significance_h(self):
-        self.assertTrue(compare_to_significance(2.24j, 2.23j, 2))
+        self.assertTrue(compare_to_significance_complex(0, 2.24, 0, 2.23, 2))
 
     def test_compare_to_significance_i(self):
-        self.assertFalse(compare_to_significance(2.24j, 2.23j, 3))
+        self.assertFalse(compare_to_significance_complex(0, 2.24, 0, 2.23, 3))
 
     def test_compare_to_significance_j(self):
-        self.assertFalse(compare_to_significance(2.24+2.24j, 2.24+2.23j, 3))
+        self.assertFalse(compare_to_significance_complex(2.24, 2.24, 2.24, 2.23, 3))
 
     def test_compare_to_significance_k(self):
-        self.assertFalse(compare_to_significance(2.23+2.24j, 2.22+2.24j, 3))
+        self.assertFalse(compare_to_significance_complex(2.23, 2.24, 2.22, 2.24, 3))
 
     def test_compare_to_significance_l(self):
-        self.assertFalse(compare_to_significance(1-1j, 1+1j, 3))
+        self.assertFalse(compare_to_significance_complex(1, -1, 1, 1, 3))
 
     def test_compare_to_significance_m(self):
-        self.assertTrue(compare_to_significance(0.9999999999999998+0j, 1+0j, 3))
+        self.assertTrue(compare_to_significance_complex(0.9999999999999998, 0, 1, 0, 3))
 
     def test_compare_to_significance_n(self):
-        self.assertTrue(compare_to_significance(1+0j, 0.9999999999999998+0j, 3))
+        self.assertTrue(compare_to_significance_complex(1, 0, 0.9999999999999998, 0, 3))
 
     def test_compare_to_significance_o(self):
-        self.assertFalse(compare_to_significance(1+0j, 0.9999999999999998+0j, 17))
+        self.assertFalse(compare_to_significance_complex(1, 0, 0.9999999999999998, 0, 17))

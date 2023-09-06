@@ -11,13 +11,14 @@ from .impl import SciPyNumPy, Evalf
 
 class Compare:
 
-    def __init__(self, *, test_time_limit=None):
+    def __init__(self, *, test_time_limit=None, convert_exceptions=True):
         """
         Args:
         test_time_limit: Execute no more than this many tests
-        test_count_limit: Stop executing tests after this much time as passed
+        convert_exceptions: Don't throw exceptions. Return them as part of the result
         """
         self.test_time_limit = test_time_limit
+        self.convert_exceptions = convert_exceptions
 
     @functools.lru_cache(maxsize=None)
     def compare(self, expr1, expr2, *symbols):
@@ -43,7 +44,7 @@ class Compare:
 
         significance = 10
 
-        impl = SciPyNumPy(expr1, expr2, symbols, significance)
+        impl = SciPyNumPy(expr1, expr2, symbols, significance, self.convert_exceptions)
 
         if self.test_time_limit != None:
             start = datetime.datetime.now()

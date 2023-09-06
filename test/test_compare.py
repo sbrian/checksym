@@ -6,8 +6,8 @@ from pprint import pp
 
 class TestCompare(unittest.TestCase):
 
-    def setUp(self):
-        self.compare = Compare()
+    def setUp(self):  
+        self.compare = Compare(convert_exceptions=False)
 
     def test_compare_with_symbols_one_symbol(self):
         """
