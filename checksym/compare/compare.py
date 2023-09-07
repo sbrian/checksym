@@ -60,10 +60,22 @@ class Compare:
 
         result = self.compare_with_impl(impl, symbols, test_value_sets)
 
-        if result != None:
-            impl.do_sympy_doit_first = True
-            result = self.compare_with_impl(impl, symbols, test_value_sets)
+        if result == None:
+            return result
 
+        # Possible failures, likely do to something like numbers being too small
+        # and going to zero, or a "polar_lift not defined", or just evaluates wrong.
+        # Try another way.
+        impl.do_sympy_doit_first = True
+        result2 = self.compare_with_impl(impl, symbols, test_value_sets)
+
+        if result2 == None:
+            return None
+
+        # Prefer to return a comparison failure rather than an error
+        if result.get('error') and not result2.get('error'):
+            return result2
+        
         return result
 
     def compare_with_impl(self, impl, symbols, test_value_sets):

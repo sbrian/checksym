@@ -7,7 +7,7 @@ from pprint import pp
 class TestCompare(unittest.TestCase):
 
     def setUp(self):  
-        self.compare = Compare(convert_exceptions=False)
+        self.compare = Compare(convert_exceptions=True)
 
     def test_compare_with_symbols_one_symbol(self):
         """
@@ -201,6 +201,23 @@ class TestCompare(unittest.TestCase):
         result = self.compare.compare(expr1, expr2, n, Delta)
         self.assertEqual(None, result)
 
+    def test_complex_number_with_gaussian_4_with_error(self):
+        """
+        This will fail on a compare, and then do the retry that gives the exception, but we want to test
+        that it returns the failure from the compare, not the one that gives the exception
+        """
+        n = symbols("n", positive=True)
+        x = symbols("x", real=True)
+        Delta = symbols("Delta", complex=True, real_part_positive=True)
+        expr1 = hbar**2*n**2*Integral(x**2*exp(-x**2*(conjugate(Delta)**2 + Delta**2)/(2*Abs(Delta)**4)), (x, -1, 1))/(Delta**2*conjugate(Delta)**2)
+        expr2 = hbar**2*n**2*Abs(Delta)**4*Integral(exp(-x**2*(conjugate(Delta)**2 + Delta**2)/(2*Abs(Delta)**4)), (x, -1, 1))/(Delta**2*(conjugate(Delta)**2 + Delta**2)*conjugate(Delta)**2)
+        result = self.compare.compare(expr1, expr2, n, Delta) 
+        self.assertNotEqual(None, result)
+        self.assertFalse(result.get('error'))
+        self.assertFalse(result.get('exception'))
+
+
+
     def test_complex_number_will_fail(self):
         z = symbols("z", complex=True)
         expr1 = z
@@ -229,6 +246,27 @@ class TestCompare(unittest.TestCase):
         expr1 = 2*Integral(im(z), (x, -1, 1))
         expr2 = Integral(im(2*z), (x, -1, 1))
         result = self.compare.compare(expr1, expr2, z)
+        self.assertEqual(None, result)
+
+    def test_integral_that_is_wrong_without_doit(self):
+        """
+        Trying without doit(), we get
+
+        {'symbols': (a, n),
+        'test_value_set': [13/10, 39/10],
+        'expr1': Integral(hbar**2*n**2*x**2*exp(-x**2/a**2)/a**4, (x, -oo, oo)),
+        'expr2': hbar**2*n**2*Integral(x**2*exp(-x**2/a**2), (x, -oo, oo))/a**4,
+        'expr1_final': 1.1547787718384969e-67,
+        'expr2_final': (1.153142455075021e-67+0j)}
+
+        Make sure it falls back to trying again with doit()
+        """
+        x = symbols("x", real=True)
+        a = symbols("a", positive=True)
+        n = symbols("n", positive=True)
+        expr1 = Integral(hbar**2*n**2*x**2*exp(-x**2/a**2)/a**4, (x, -oo, oo))
+        expr2 = hbar**2*n**2*Integral(x**2*exp(-x**2/a**2), (x, -oo, oo))/a**4
+        result = self.compare.compare(expr1, expr2, a, n)
         self.assertEqual(None, result)
 
 if __name__ == '__main__':

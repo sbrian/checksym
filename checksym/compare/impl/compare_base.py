@@ -36,10 +36,12 @@ class CompareBase(ABC):
         result_dict['expr2_final'] = expr2_final
         #pp(result_dict)
         if self._check_for_zero(expr1_final) or self._check_for_zero(expr2_final):
+            result_dict['error'] = True
             result_dict['message'] = "Some expression evaluated to 0. This usually means values got out of supported ranges."
             return result_dict
 
         if self._check_for_nan(expr1_final) or self._check_for_nan(expr2_final):
+            result_dict['error'] = True
             result_dict['message'] = "Some expression evaluated to NaN."
             return result_dict
 
@@ -50,6 +52,7 @@ class CompareBase(ABC):
                 return result_dict
         except Exception as e:
             if self.convert_exceptions:
+                result_dict['error'] = True
                 result_dict['exception'] = str(e)
                 return result_dict
             else:
