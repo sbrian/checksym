@@ -1,21 +1,47 @@
 from sympy import lambdify
 from .compare_base import CompareBase
+from math import isnan
+from pprint import pp
+from numpy import ndarray, ComplexWarning
+from warnings import catch_warnings, filterwarnings
 
 class SciPyNumPy(CompareBase):
 
+    do_sympy_doit_first = False
+
     def _evaluate(self):
-        expr1_evaled = self.expr1.doit()
-        expr2_evaled = self.expr2.doit()
+
+        # Without the 'doit()' here, test_integrate_small_value_ensure_non_zero will fail
+        if self.do_sympy_doit_first:
+            expr1 = self.expr1.doit()
+            expr2 = self.expr2.doit()
+        else:
+            expr1 = self.expr1
+            expr2 = self.expr2
+
         lambdify_modules = ['scipy', 'numpy']
         test_value_set_for_lambdify = list(map(self.cleanup_for_lambdify, self.test_value_set))
-        this_expr1_lambdify_evaled = lambdify(self.symbols, expr1_evaled, lambdify_modules)(*test_value_set_for_lambdify)
-        this_expr2_lambdify_evaled = lambdify(self.symbols, expr2_evaled, lambdify_modules)(*test_value_set_for_lambdify)
+
+        with catch_warnings():
+            filterwarnings('ignore', category=ComplexWarning)
+            this_expr1_lambdify_evaled = lambdify(self.symbols, expr1, lambdify_modules)(*test_value_set_for_lambdify)
+            this_expr2_lambdify_evaled = lambdify(self.symbols, expr2, lambdify_modules)(*test_value_set_for_lambdify)
+        
+        this_expr1_lambdify_evaled = self._cleanup_result(this_expr1_lambdify_evaled)
+        this_expr2_lambdify_evaled = self._cleanup_result(this_expr2_lambdify_evaled)
+        
         return (this_expr1_lambdify_evaled, this_expr1_lambdify_evaled.real, this_expr1_lambdify_evaled.imag,
             this_expr2_lambdify_evaled, this_expr2_lambdify_evaled.real, this_expr1_lambdify_evaled.imag)
     
+    def _cleanup_result(self, value):
+        return value
+
     def cleanup_for_lambdify(self, expr):
         real_imag = expr.as_real_imag()
         return float(real_imag[0]) + 1j * float(real_imag[1])
     
     def _check_for_zero(self, value):
         return value == 0
+    
+    def _check_for_nan(self, value):
+        return isnan(value.real) or isnan(value.imag)

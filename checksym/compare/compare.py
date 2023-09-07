@@ -7,7 +7,7 @@ import mpmath
 from checksym.util import compare_to_significance, build_test_value_sets
 from pprint import pp
 import datetime
-from .impl import SciPyNumPy, Evalf
+from .impl import SciPyNumPy, Evalf, Mpmath
 
 class Compare:
 
@@ -38,22 +38,41 @@ class Compare:
         in lambdify might mean that the list of symbols is incomplete.
         """
 
-        test_value_sets = build_test_value_sets(*symbols)
+        # Imaginary parts, combined with integrals with limits at infinity, provoke
+        # `NameError: name 'polar_lift' is not defined` errors.
+        # So if we have non-real symbols involved, replace such integrals with integrals
+        # from -1 to 1.
+        # It would be more complete to only replace integrals that have a non-real symbol
+        # within them instead of all integrals in the expression, but we will keep it simple for now.
+        # Right now we only change integrals where both bounds are infinite. It's tricky otherwise,
+        # because we can just set a bound to -1 or 1 without considering what the other bound is.
+        # Probably also need to consider both expressions, as one might be shifted version of the other.
+        # Maybe we will need to address that later.
+        if any(map(lambda x: not x.is_real, symbols)):
+            expr1 = replace_infinite_integrals(expr1)
+            expr2 = replace_infinite_integrals(expr2)
 
-        counter = 0
+        test_value_sets = build_test_value_sets(*symbols)
 
         significance = 10
 
         impl = SciPyNumPy(expr1, expr2, symbols, significance, self.convert_exceptions)
 
+        result = self.compare_with_impl(impl, symbols, test_value_sets)
+
+        if result != None:
+            impl.do_sympy_doit_first = True
+            result = self.compare_with_impl(impl, symbols, test_value_sets)
+
+        return result
+
+    def compare_with_impl(self, impl, symbols, test_value_sets):
         if self.test_time_limit != None:
             start = datetime.datetime.now()
 
         for test_value_set in test_value_sets:
             if len(symbols) != len(test_value_set):
                 raise Exception("Invalid test_value_set length")
-            
-            counter = counter+1
             
             this_result = impl.compare_for_symbols_with_test_values(test_value_set)
 
@@ -79,4 +98,17 @@ class Compare:
             return this_result
         return new_expr
 
+def replace_infinite_integrals(expr):
+    if expr.is_Atom or expr.is_Dummy:
+        return expr
+    elif isinstance(expr, Integral):
+        limit_tuple = expr.args[-1]
+        if limit_tuple[1] == -oo and limit_tuple[2] == oo:
+            limit_tuple = (limit_tuple[0], -1, 1)
+        elif limit_tuple[1] == oo and limit_tuple[2] == -oo:
+            limit_tuple = (limit_tuple[0], 1, -1)
+        return Integral(*(expr.args[:-1]), limit_tuple)
+    else:
+        newargs = map(lambda arg: replace_infinite_integrals(arg), expr.args)
+    return expr.func(*newargs)
     

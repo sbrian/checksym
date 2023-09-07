@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from checksym.util import compare_to_significance_complex
 from checksym.compare.compare_exception import CompareException
-from pprint import pformat
+from pprint import pformat, pp
 
 class CompareBase(ABC):
 
@@ -34,9 +34,13 @@ class CompareBase(ABC):
         
         result_dict['expr1_final'] = expr1_final
         result_dict['expr2_final'] = expr2_final
-
+        #pp(result_dict)
         if self._check_for_zero(expr1_final) or self._check_for_zero(expr2_final):
             result_dict['message'] = "Some expression evaluated to 0. This usually means values got out of supported ranges."
+            return result_dict
+
+        if self._check_for_nan(expr1_final) or self._check_for_nan(expr2_final):
+            result_dict['message'] = "Some expression evaluated to NaN."
             return result_dict
 
         try:
@@ -60,4 +64,8 @@ class CompareBase(ABC):
 
     @abstractmethod
     def _check_for_zero(self, value):
+        pass
+
+    @abstractmethod
+    def _check_for_nan(self, value):
         pass

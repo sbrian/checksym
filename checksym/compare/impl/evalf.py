@@ -1,6 +1,7 @@
 from checksym.util import compare_to_significance_complex
 from .compare_base import CompareBase
 from sympy import re, im
+from math import isnan
 
 class Evalf(CompareBase):
 
@@ -16,3 +17,6 @@ class Evalf(CompareBase):
     
     def _check_for_zero(self, value):
         return value == 0
+    
+    def _check_for_nan(self, value):
+        return isnan(value)

@@ -97,6 +97,7 @@ class TestCompare(unittest.TestCase):
         expr1 = hbar*n**2*Integral(exp(-a**2*x**2/hbar**2), (x, -oo, oo))/2
         expr2 = hbar**2*Integral(n**2*a**2*exp(-a**2*p**2/hbar**2)/hbar, (p, -oo, oo))/a**2
         result = self.compare.compare(expr1, expr2, a, n)
+        #pp(result)
         self.assertNotEqual(None, result)
 
     def test_integrate_small_value(self):
@@ -146,6 +147,18 @@ class TestCompare(unittest.TestCase):
         result = self.compare.compare(expr1, expr2, z, n, x)
         self.assertEqual(None, result)
 
+    def test_simplest_complex_number_with_gaussian(self):
+        '''
+        This only verifies that nothing goes to 0
+        '''
+        z = symbols("z", complex=True)
+        n = symbols("n", positive=True)
+        x = symbols("x", real=True)
+        expr1 = Integral(E**(-x**2), (x, -oo, oo))
+        expr2 = Integral(E**(-x**2), (x, -oo, oo))
+        result = self.compare.compare(expr1, expr2, z, n)
+        self.assertEqual(None, result)
+
     def test_complex_number_with_gaussian(self):
         z = symbols("z", complex=True)
         n = symbols("n", positive=True)
@@ -165,6 +178,13 @@ class TestCompare(unittest.TestCase):
         self.assertEqual(None, result)
 
     def test_complex_number_with_gaussian_2(self):
+        """
+        This will get converted to an integral from -1 to 1 that evaluates to 2.0281284727644744
+
+        Verified with Mathematica
+        delta := 12/5 - 24*\[ImaginaryI]/5
+        N[Integrate[\[ExponentialE]^(-x^2/delta^2)*\[ExponentialE]^(-x^2/Conjugate[delta]^2), {x, -1, 1}]]
+        """
         x = symbols("x", real=True)
         Delta = symbols("Delta", complex=True, real_part_positive=True)
         expr1 = Integral(exp(-x**2/(Delta**2))*exp(-x**2/(conjugate(Delta)**2)), (x, -oo, oo))
