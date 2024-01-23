@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from checksym.util import compare_to_significance_complex
-from checksym.compare.compare_exception import CompareException
+from checksym.compare.exception import CompareException
 from pprint import pformat, pp
 
 class CompareBase(ABC):
@@ -63,6 +63,11 @@ class CompareBase(ABC):
 
     @abstractmethod
     def _evaluate(self):
+        """"
+        Should return: (expr1_final, expr1_real, expr1_imag, expr2_final, expr2_real, expr2_imag)
+        The "exprN_final" component is for display only. The real and imaginary parts
+        are for the actual comparison.
+        """
         pass
 
     @abstractmethod

@@ -1,6 +1,6 @@
 import unittest
 from checksym import Compare, remove
-from sympy import Integral, symbols, exp, oo, E, sqrt, I, pi, conjugate, Abs, im
+from sympy import Integral, symbols, exp, oo, E, sqrt, I, pi, conjugate, Abs, im, simplify, expand, diff, UnevaluatedExpr
 from sympy.physics.quantum import hbar
 from pprint import pp
 
@@ -83,7 +83,7 @@ class TestCompare(unittest.TestCase):
         expr1 = Integral(exp(-alpha*x**2 + beta*x), (x, -oo, oo))
         expr2 = sqrt(pi)*exp(beta**2/(4*alpha))/sqrt(alpha)
         result = self.compare.compare(expr1, expr2, alpha, beta)
-        self.assertEqual(None, result)
+        self.assertCompareResultSuccess(result)
 
     def test_moving_constants_around(self):
         """
@@ -122,7 +122,7 @@ class TestCompare(unittest.TestCase):
         expr1 = Integral(exp(-x**2/hbar**2), (x, -oo, oo))
         expr2 = Integral(exp(-x**2/hbar**2), (x, -oo, oo))
         result = self.compare.compare(expr1, expr2, a)
-        self.assertEqual(None, result)
+        self.assertCompareResultSuccess(result)
 
     def test_moving_constants_around_2(self):
         """
@@ -136,7 +136,7 @@ class TestCompare(unittest.TestCase):
         expr1 = hbar*n**2*Integral(exp(-a**2*x**2/hbar**2), (x, -oo, oo))/2
         expr2 = hbar**2*Integral(n**2*a**2*exp(-a**2*p**2/hbar**2)/hbar, (p, -oo, oo))/(2*a**2)
         result = self.compare.compare(expr1, expr2, a, n)
-        self.assertEqual(None, result)
+        self.assertCompareResultSuccess(result)
 
     def test_complex_number(self):
         z = symbols("z", complex=True)
@@ -145,7 +145,7 @@ class TestCompare(unittest.TestCase):
         expr1 = 2*(n+E**z*x**2)
         expr2 = 2*n+2*E**z*x**2
         result = self.compare.compare(expr1, expr2, z, n, x)
-        self.assertEqual(None, result)
+        self.assertCompareResultSuccess(result)
 
     def test_simplest_complex_number_with_gaussian(self):
         '''
@@ -157,7 +157,7 @@ class TestCompare(unittest.TestCase):
         expr1 = Integral(E**(-x**2), (x, -oo, oo))
         expr2 = Integral(E**(-x**2), (x, -oo, oo))
         result = self.compare.compare(expr1, expr2, z, n)
-        self.assertEqual(None, result)
+        self.assertCompareResultSuccess(result)
 
     def test_complex_number_with_gaussian(self):
         z = symbols("z", complex=True)
@@ -166,7 +166,7 @@ class TestCompare(unittest.TestCase):
         expr1 = Integral(n*E**(z*x**2), (x, -oo, oo))
         expr2 = n*Integral(E**(z*x**2), (x, -oo, oo))
         result = self.compare.compare(expr1, expr2, z, n)
-        self.assertEqual(None, result)
+        self.assertCompareResultSuccess(result)
 
     def test_complex_number_with_gaussian_reversed(self):
         z = symbols("z", complex=True)
@@ -175,22 +175,22 @@ class TestCompare(unittest.TestCase):
         expr1 = Integral(n*E**(z*x**2), (x, oo, -oo))
         expr2 = n*Integral(E**(z*x**2), (x, oo, -oo))
         result = self.compare.compare(expr1, expr2, z, n)
-        self.assertEqual(None, result)
+        self.assertCompareResultSuccess(result)
 
     def test_complex_number_with_gaussian_2(self):
         """
         This will get converted to an integral from -1 to 1 that evaluates to 2.0281284727644744
 
         Verified with Mathematica
-        delta := 12/5 - 24*\[ImaginaryI]/5
-        N[Integrate[\[ExponentialE]^(-x^2/delta^2)*\[ExponentialE]^(-x^2/Conjugate[delta]^2), {x, -1, 1}]]
+        delta := 12/5 - 24*\\[ImaginaryI]/5
+        N[Integrate[\\[ExponentialE]^(-x^2/delta^2)*\\[ExponentialE]^(-x^2/Conjugate[delta]^2), {x, -1, 1}]]
         """
         x = symbols("x", real=True)
         Delta = symbols("Delta", complex=True, real_part_positive=True)
         expr1 = Integral(exp(-x**2/(Delta**2))*exp(-x**2/(conjugate(Delta)**2)), (x, -oo, oo))
         expr2 = Integral(exp(-x**2*(conjugate(Delta)**2 + Delta**2)/(Abs(Delta)**4)), (x, -oo, oo))
         result = self.compare.compare(expr1, expr2, Delta)
-        self.assertEqual(None, result)
+        self.assertCompareResultSuccess(result)
 
     def test_complex_number_with_gaussian_3(self):
         n = symbols("n", positive=True)
@@ -199,7 +199,7 @@ class TestCompare(unittest.TestCase):
         expr1 = Integral(n**2*x**2*exp(-x**2/(2*Delta**2))*exp(-x**2/(2*conjugate(Delta)**2)), (x, -oo, oo))
         expr2 = Integral(n**2*x**2*exp(-x**2*(conjugate(Delta)**2 + Delta**2)/(2*Abs(Delta)**4)), (x, -oo, oo))
         result = self.compare.compare(expr1, expr2, n, Delta)
-        self.assertEqual(None, result)
+        self.assertCompareResultSuccess(result)
 
     def test_complex_number_with_gaussian_4_with_error(self):
         """
@@ -246,7 +246,7 @@ class TestCompare(unittest.TestCase):
         expr1 = 2*Integral(im(z), (x, -1, 1))
         expr2 = Integral(im(2*z), (x, -1, 1))
         result = self.compare.compare(expr1, expr2, z)
-        self.assertEqual(None, result)
+        self.assertCompareResultSuccess(result)
 
     def test_integral_that_is_wrong_without_doit(self):
         """
@@ -267,7 +267,39 @@ class TestCompare(unittest.TestCase):
         expr1 = Integral(hbar**2*n**2*x**2*exp(-x**2/a**2)/a**4, (x, -oo, oo))
         expr2 = hbar**2*n**2*Integral(x**2*exp(-x**2/a**2), (x, -oo, oo))/a**4
         result = self.compare.compare(expr1, expr2, a, n)
-        self.assertEqual(None, result)
+        self.assertCompareResultSuccess(result)
+
+
+    def test_compare_two_real_expressions(self):
+        """
+        1c from the exercises for Act 2 of Visual Differential Geometry
+        and Forms
+        """
+        u, v, du, dv = symbols("u v du dv", Real=True)
+        x = u**2 - v**2
+        y = 2*u*v
+        ds_squared = simplify(expand((diff(x, u)*du+diff(x, v)*dv)**2 + (diff(y, u)*du+diff(y, v)*dv)**2))
+        ds_squared_a = UnevaluatedExpr(4)*(u**2+v**2)*(du**2+dv**2)
+        result = self.compare.compare(ds_squared, ds_squared_a, u, v, du, dv)
+        self.assertCompareResultSuccess(result)
+
+    def test_detects_failure_to_get_all_free_variables(self):
+        """
+        I left out one "dv" variable. Make sure it gets the right emssage.
+        """
+        u, v, du, dv = symbols("u v du dv", Real=True)
+        x = u**2 - v**2
+        y = 2*u*v
+        ds_squared = simplify(expand((diff(x, u)*du+diff(x, v)*dv)**2 + (diff(y, u)*du+diff(y, v)*dv)**2))
+        ds_squared_a = UnevaluatedExpr(4)*(u**2+v**2)*(du**2+dv**2)
+        result = self.compare.compare(ds_squared, ds_squared_a, u, v, dv)
+        self.assertNotEqual(None, result)
+        self.assertEqual(result["exception"], "Result is still an expression. Check to be sure all free variables are passed in the compare call.")
+
+
+    def assertCompareResultSuccess(self, result):
+        if result != None:
+            raise AssertionError("Compare failed", result)
 
 if __name__ == '__main__':
     unittest.main()

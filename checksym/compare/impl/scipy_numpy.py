@@ -1,5 +1,6 @@
-from sympy import lambdify
+from sympy import lambdify, Expr
 from .compare_base import CompareBase
+from checksym.compare.exception import CompareException
 from math import isnan
 from pprint import pp
 from numpy import ndarray, ComplexWarning
@@ -34,6 +35,8 @@ class SciPyNumPy(CompareBase):
             this_expr2_lambdify_evaled, this_expr2_lambdify_evaled.real, this_expr1_lambdify_evaled.imag)
     
     def _cleanup_result(self, value):
+        if isinstance(value, Expr):
+            raise CompareException("Result is still an expression. Check to be sure all free variables are passed in the compare call.")
         return value
 
     def cleanup_for_lambdify(self, expr):
